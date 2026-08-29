@@ -159,7 +159,7 @@
                 <strong>How to Play:</strong><br>
                 Tap LEFT to steer left, RIGHT to steer right<br>
                 Tap MIDDLE to JUMP over rocks!<br>
-                Avoid trees! Collect snowflakes!
+                Longer air = bigger bonus. Trees can't be jumped!
             </div>
         </div>
 
@@ -186,6 +186,8 @@
         const hedgehogImg = new Image();
         hedgehogImg.src = 'data:image/jpeg;base64,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';
         
+        // Airborne state is tracked as altitude above the slope rather than a raw
+        // screen position, so the hedgehog can never be launched off the canvas.
         let player = {
             x: 0,
             y: 0,
@@ -194,23 +196,45 @@
             height: 70,
             rotation: 0,
             targetX: 0,
-            velocityY: 0,
+            airHeight: 0,
+            airVelocity: 0,
             isJumping: false,
-            jumpPower: -22,
-            gravity: 0.7
+            jumpImpulse: 26,
+            gravity: 0.8,
+            spin: 0,
+            airTime: 0,
+            maxLift: 0
         };
+        
+        // Apex of a full jump, used to map altitude onto the on-screen arc so the
+        // sprite sweeps its whole travel instead of pinning at the top.
+        player.peakHeight = (player.jumpImpulse * player.jumpImpulse) / (2 * player.gravity);
+        
+        function altitudeRatio() {
+            return Math.min(player.airHeight / player.peakHeight, 1);
+        }
         
         let obstacles = [];
         let snowflakes = [];
         let trees = [];
+        let particles = [];
+        let popups = [];
         let terrainOffset = 0;
+        let shake = 0;
+        
+        const ROCK_CLEAR_HEIGHT = 30;
+        // How much bigger the sprite renders at the apex. The lift cap subtracts the
+        // scaled half-height so a big air can't clip off the top of the canvas.
+        const AIR_SCALE_BONUS = 0.45;
         
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             player.x = canvas.width / 2;
-            player.y = canvas.height * 0.3;
-            player.baseY = canvas.height * 0.3;
+            player.y = canvas.height * 0.34;
+            player.baseY = canvas.height * 0.34;
+            const apexHalfHeight = (player.height * (1 + AIR_SCALE_BONUS)) / 2;
+            player.maxLift = Math.max(0, player.baseY - apexHalfHeight - 8);
             player.targetX = player.x;
         }
         
@@ -236,11 +260,7 @@
                 // Right side - steer right
                 player.targetX = Math.min(canvas.width - player.width / 2, player.targetX + 40);
             } else {
-                // Middle - JUMP!
-                if (!player.isJumping) {
-                    player.isJumping = true;
-                    player.velocityY = player.jumpPower;
-                }
+                startJump();
             }
         }
         
@@ -255,11 +275,109 @@
             } else if (x > screenThird * 2) {
                 player.targetX = Math.min(canvas.width - player.width / 2, player.targetX + 40);
             } else {
-                if (!player.isJumping) {
-                    player.isJumping = true;
-                    player.velocityY = player.jumpPower;
-                }
+                startJump();
             }
+        }
+        
+        function startJump() {
+            if (player.isJumping) return;
+            
+            player.isJumping = true;
+            player.airVelocity = player.jumpImpulse;
+            player.airTime = 0;
+            player.spin = 0;
+            spawnSpray(18, 1.2);
+        }
+        
+        function spawnSpray(count, force) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: player.x + (Math.random() - 0.5) * player.width,
+                    y: player.baseY + player.height / 3,
+                    vx: (Math.random() - 0.5) * 6 * force,
+                    vy: (Math.random() * -3 - 1) * force,
+                    size: Math.random() * 4 + 2,
+                    life: 1
+                });
+            }
+        }
+        
+        function addPopup(text, color) {
+            popups.push({
+                x: player.x,
+                y: player.y - player.height,
+                text: text,
+                color: color,
+                life: 1
+            });
+        }
+        
+        function land() {
+            const airTime = player.airTime;
+            
+            player.isJumping = false;
+            player.airHeight = 0;
+            player.airVelocity = 0;
+            player.spin = 0;
+            player.airTime = 0;
+            
+            spawnSpray(26, 1.8);
+            shake = Math.min(14, airTime * 0.35);
+            
+            const bonus = airTime * 8;
+            score += bonus;
+            
+            if (airTime > 55) {
+                addPopup('MASSIVE AIR! +' + bonus, '#e74c3c');
+            } else if (airTime > 35) {
+                addPopup('BIG AIR! +' + bonus, '#f39c12');
+            } else {
+                addPopup('+' + bonus, '#2c3e50');
+            }
+        }
+        
+        function updateParticles() {
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy - speed * 0.4;
+                p.vy += 0.25;
+                p.life -= 0.03;
+            });
+            particles = particles.filter(p => p.life > 0);
+        }
+        
+        function updatePopups() {
+            popups.forEach(p => {
+                p.y -= 1.4;
+                p.life -= 0.02;
+            });
+            popups = popups.filter(p => p.life > 0);
+        }
+        
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawPopups() {
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 28px -apple-system, sans-serif';
+            popups.forEach(p => {
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.strokeText(p.text, p.x, p.y);
+                ctx.fillStyle = p.color;
+                ctx.fillText(p.text, p.x, p.y);
+            });
+            ctx.globalAlpha = 1;
+            ctx.textAlign = 'left';
         }
         
         function startGame() {
@@ -272,12 +390,18 @@
             obstacles = [];
             snowflakes = [];
             trees = [];
+            particles = [];
+            popups = [];
             terrainOffset = 0;
+            shake = 0;
             player.x = canvas.width / 2;
             player.y = player.baseY;
             player.targetX = player.x;
             player.rotation = 0;
-            player.velocityY = 0;
+            player.airHeight = 0;
+            player.airVelocity = 0;
+            player.airTime = 0;
+            player.spin = 0;
             player.isJumping = false;
             
             for (let i = 0; i < 5; i++) {
@@ -330,7 +454,8 @@
         
         function drawTerrain() {
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Oversized so the landing shake never exposes an unpainted edge.
+            ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
             
             ctx.strokeStyle = '#E0E0E0';
             ctx.lineWidth = 2;
@@ -347,26 +472,27 @@
         }
         
         function drawPlayer() {
-            // Draw shadow (3D effect)
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            // Altitude drives both the shadow gap and the sprite scale, which reads
+            // as height without ever moving the sprite off the canvas.
+            const altitude = altitudeRatio();
+            
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.3 - altitude * 0.18})`;
             ctx.beginPath();
-            const shadowOffset = player.isJumping ? (player.baseY - player.y) * 0.3 : 0;
-            ctx.ellipse(player.x, player.baseY + 10, 
-                       player.width / 2 - shadowOffset / 2, 
-                       player.height / 4 - shadowOffset / 4, 
+            ctx.ellipse(player.x, player.baseY + player.height / 2,
+                       (player.width / 2) * (1 - altitude * 0.5),
+                       (player.height / 5) * (1 - altitude * 0.5),
                        0, 0, Math.PI * 2);
             ctx.fill();
             
-            // Draw player
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            
-            // Only rotate slightly when turning, not when jumping
-            if (!player.isJumping) {
-                ctx.rotate(player.rotation);
+            if (player.isJumping) {
+                drawAirLines(altitude);
             }
             
-            // Draw hedgehog image
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.scale(1 + altitude * AIR_SCALE_BONUS, 1 + altitude * AIR_SCALE_BONUS);
+            ctx.rotate(player.isJumping ? player.spin : player.rotation);
+            
             if (hedgehogImg.complete) {
                 ctx.drawImage(hedgehogImg, 
                     -player.width / 2, 
@@ -374,7 +500,6 @@
                     player.width, 
                     player.height);
             } else {
-                // Fallback if image not loaded
                 ctx.fillStyle = '#8B4513';
                 ctx.beginPath();
                 ctx.ellipse(0, 0, player.width / 2, player.height / 2, 0, 0, Math.PI * 2);
@@ -382,6 +507,18 @@
             }
             
             ctx.restore();
+        }
+        
+        function drawAirLines(altitude) {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 + altitude * 0.45})`;
+            ctx.lineWidth = 3;
+            for (let i = -1; i <= 1; i++) {
+                const x = player.x + i * (player.width * 0.55);
+                ctx.beginPath();
+                ctx.moveTo(x, player.y + player.height * 0.7);
+                ctx.lineTo(x, player.y + player.height * 0.7 + 20 + altitude * 45);
+                ctx.stroke();
+            }
         }
         
         function drawObstacles() {
@@ -475,21 +612,29 @@
             score += Math.floor(speed * 0.5);
             terrainOffset += speed;
             
-            // Handle jumping physics
+            // Airborne physics: altitude climbs freely, but the drawn position is
+            // clamped to maxLift so the hedgehog always stays on screen.
             if (player.isJumping) {
-                player.velocityY += player.gravity;
-                player.y += player.velocityY;
+                player.airVelocity -= player.gravity;
+                player.airHeight += player.airVelocity;
+                player.airTime++;
+                player.spin += 0.09;
                 
-                if (player.y >= player.baseY) {
-                    player.y = player.baseY;
-                    player.velocityY = 0;
-                    player.isJumping = false;
+                if (player.airHeight <= 0) {
+                    land();
                 }
             }
+            
+            player.y = player.baseY - altitudeRatio() * player.maxLift;
             
             const dx = player.targetX - player.x;
             player.x += dx * 0.15;
             player.rotation = dx * 0.002;
+            
+            updateParticles();
+            updatePopups();
+            
+            if (shake > 0) shake *= 0.85;
             
             obstacles.forEach(obs => {
                 obs.y -= speed;
@@ -511,22 +656,17 @@
                 spawnSnowflake();
             }
             
-            // Collision detection with jump awareness
+            // The hit zone is measured on the slope (baseY) rather than at the drawn
+            // position, so altitude is what clears a rock and a tree stays lethal
+            // no matter how high the jump goes.
             obstacles.forEach(obs => {
-                const dist = Math.hypot(player.x - obs.x, player.y - obs.y);
-                const collisionDist = (player.width + obs.width) / 2.5;
+                const horizontalGap = Math.abs(player.x - obs.x);
+                const slopeGap = Math.abs(player.baseY - (obs.y + obs.height / 2));
                 
-                if (dist < collisionDist) {
-                    // Can jump over rocks but not trees!
-                    if (obs.type === 'tree') {
+                if (horizontalGap < (player.width + obs.width) / 2.5 &&
+                    slopeGap < (player.height + obs.height) / 4) {
+                    if (obs.type === 'tree' || player.airHeight < ROCK_CLEAR_HEIGHT) {
                         gameOver();
-                    } else if (obs.type === 'rock') {
-                        // Check if player is high enough to clear the rock
-                        const jumpClearance = player.baseY - player.y;
-                        if (jumpClearance < 60) {
-                            // Not jumping high enough - need at least 60px clearance
-                            gameOver();
-                        }
                     }
                 }
             });
@@ -566,10 +706,19 @@
                 updateGame();
             }
             
+            ctx.save();
+            if (shake > 0.5) {
+                ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+            }
+            
             drawTerrain();
             drawObstacles();
             drawSnowflakes();
+            drawParticles();
             drawPlayer();
+            drawPopups();
+            
+            ctx.restore();
             drawUI();
             
             requestAnimationFrame(gameLoop);
