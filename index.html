@@ -245,6 +245,8 @@
         
         const MIN_OBSTACLE_GAP = 210;
         const OBSTACLE_GAP_RANGE = 200;
+        const SNOW_SPECKS = 70;
+        
         function updateLiftCap() {
             const apexHalfHeight = (player.height * (1 + AIR_SCALE_BONUS)) / 2;
             player.maxLift = Math.max(0, player.baseY - apexHalfHeight - 8);
@@ -482,12 +484,22 @@
         }
         
         function drawSnow() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            for (let i = 0; i < 50; i++) {
-                const x = (Math.random() * canvas.width + terrainOffset * 0.5) % canvas.width;
-                const y = (terrainOffset * 2 + i * 20) % canvas.height;
+            // With the slope lines gone these specks are the only ground texture, so
+            // they carry the sense of speed. Each one gets a fixed column and travels
+            // up the slope with the terrain, rather than jumping to a fresh random
+            // spot every frame.
+            const span = canvas.height + 60;
+            
+            for (let i = 0; i < SNOW_SPECKS; i++) {
+                const column = Math.sin(i * 127.1) * 43758.5453;
+                const x = (column - Math.floor(column)) * canvas.width;
+                const drift = i * 31 - terrainOffset * 0.85;
+                const y = ((drift % span) + span) % span - 30;
+                const size = 1.2 + (i % 3) * 0.5;
+                
+                ctx.fillStyle = `rgba(176, 196, 214, ${0.22 + (i % 3) * 0.06})`;
                 ctx.beginPath();
-                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.arc(x, y, size, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -496,17 +508,6 @@
             ctx.fillStyle = '#FFFFFF';
             // Oversized so the landing shake never exposes an unpainted edge.
             ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
-            
-            ctx.strokeStyle = '#E0E0E0';
-            ctx.lineWidth = 2;
-            
-            for (let i = -1; i < 20; i++) {
-                const y = (i * 100 + terrainOffset) % (canvas.height + 200);
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
             
             drawSnow();
         }
