@@ -221,6 +221,10 @@
         let popups = [];
         let terrainOffset = 0;
         let shake = 0;
+        let spawnCursorY = 0;
+        
+        const MIN_OBSTACLE_GAP = 210;
+        const OBSTACLE_GAP_RANGE = 200;
         
         const ROCK_CLEAR_HEIGHT = 30;
         // How much bigger the sprite renders at the apex. The lift cap subtracts the
@@ -404,7 +408,10 @@
             player.spin = 0;
             player.isJumping = false;
             
-            for (let i = 0; i < 5; i++) {
+            // Start the field below the fold so a run always opens with clear slope.
+            spawnCursorY = canvas.height + 120;
+            
+            for (let i = 0; i < 4; i++) {
                 spawnObstacle();
                 spawnSnowflake();
             }
@@ -419,17 +426,28 @@
             startGame();
         }
         
+        // Obstacles are placed along a downhill cursor rather than at random depths,
+        // which keeps their arrival readable and lets us guarantee a passable lane.
         function spawnObstacle() {
-            const types = ['tree', 'rock'];
-            const type = types[Math.floor(Math.random() * types.length)];
+            const type = Math.random() < 0.5 ? 'tree' : 'rock';
+            const width = type === 'tree' ? 50 : 40;
+            const height = type === 'tree' ? 80 : 35;
+            const margin = width / 2 + 8;
+            const laneWidth = player.width + 30;
             
-            obstacles.push({
-                x: Math.random() * (canvas.width - 60) + 30,
-                y: canvas.height + Math.random() * 200,
-                width: type === 'tree' ? 50 : 40,
-                height: type === 'tree' ? 80 : 35,
-                type: type
-            });
+            let x = margin + Math.random() * Math.max(1, canvas.width - margin * 2);
+            
+            for (let attempt = 0; attempt < 15; attempt++) {
+                const crowded = obstacles.some(o =>
+                    Math.abs(o.y - spawnCursorY) < 160 &&
+                    Math.abs(o.x - x) < laneWidth
+                );
+                if (!crowded) break;
+                x = margin + Math.random() * Math.max(1, canvas.width - margin * 2);
+            }
+            
+            obstacles.push({ x: x, y: spawnCursorY, width: width, height: height, type: type });
+            spawnCursorY += MIN_OBSTACLE_GAP + Math.random() * OBSTACLE_GAP_RANGE;
         }
         
         function spawnSnowflake() {
@@ -642,7 +660,8 @@
             
             obstacles = obstacles.filter(obs => obs.y > -obs.height - 100);
             
-            while (obstacles.length < 8) {
+            spawnCursorY -= speed;
+            while (spawnCursorY < canvas.height + 260) {
                 spawnObstacle();
             }
             
