@@ -347,12 +347,10 @@
         }
         
         function drawPlayer() {
-            ctx.save();
-            
             // Draw shadow (3D effect)
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.beginPath();
-            const shadowOffset = player.isJumping ? (player.baseY - player.y) * 0.5 : 0;
+            const shadowOffset = player.isJumping ? (player.baseY - player.y) * 0.3 : 0;
             ctx.ellipse(player.x, player.baseY + 10, 
                        player.width / 2 - shadowOffset / 2, 
                        player.height / 4 - shadowOffset / 4, 
@@ -360,16 +358,23 @@
             ctx.fill();
             
             // Draw player
+            ctx.save();
             ctx.translate(player.x, player.y);
-            ctx.rotate(player.rotation);
             
-            // Add 3D depth effect when jumping
-            const scale = 1 + (player.baseY - player.y) * 0.002;
-            ctx.scale(scale, scale);
+            // Only rotate slightly when turning, not when jumping
+            if (!player.isJumping) {
+                ctx.rotate(player.rotation);
+            }
             
+            // Draw hedgehog image
             if (hedgehogImg.complete) {
-                ctx.drawImage(hedgehogImg, -player.width / 2, -player.height / 2, player.width, player.height);
+                ctx.drawImage(hedgehogImg, 
+                    -player.width / 2, 
+                    -player.height / 2, 
+                    player.width, 
+                    player.height);
             } else {
+                // Fallback if image not loaded
                 ctx.fillStyle = '#8B4513';
                 ctx.beginPath();
                 ctx.ellipse(0, 0, player.width / 2, player.height / 2, 0, 0, Math.PI * 2);
