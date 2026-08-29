@@ -196,8 +196,8 @@
             targetX: 0,
             velocityY: 0,
             isJumping: false,
-            jumpPower: -15,
-            gravity: 0.8
+            jumpPower: -22,
+            gravity: 0.7
         };
         
         let obstacles = [];
@@ -518,8 +518,8 @@
                     } else if (obs.type === 'rock') {
                         // Check if player is high enough to clear the rock
                         const jumpClearance = player.baseY - player.y;
-                        if (jumpClearance < 40) {
-                            // Not jumping high enough
+                        if (jumpClearance < 60) {
+                            // Not jumping high enough - need at least 60px clearance
                             gameOver();
                         }
                     }
