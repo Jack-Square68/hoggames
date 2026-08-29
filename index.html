@@ -180,7 +180,10 @@
         let speed = 0;
         const INITIAL_BASE_SPEED = 1.5;
         let baseSpeed = INITIAL_BASE_SPEED;
-        let acceleration = 0.01;
+        // Per-frame speed gain. At 60fps this passes the old 80 km/h ceiling around
+        // the one minute mark and keeps accelerating from there.
+        let acceleration = 0.002;
+        let runFrames = 0;
         let gameLoopStarted = false;
         
         const ROCK_CLEAR_HEIGHT = 30;
@@ -242,7 +245,6 @@
         
         const MIN_OBSTACLE_GAP = 210;
         const OBSTACLE_GAP_RANGE = 200;
-        
         function updateLiftCap() {
             const apexHalfHeight = (player.height * (1 + AIR_SCALE_BONUS)) / 2;
             player.maxLift = Math.max(0, player.baseY - apexHalfHeight - 8);
@@ -407,6 +409,7 @@
             score = 0;
             speed = INITIAL_BASE_SPEED;
             baseSpeed = INITIAL_BASE_SPEED;
+            runFrames = 0;
             obstacles = [];
             snowflakes = [];
             trees = [];
@@ -462,7 +465,10 @@
                 x = margin + Math.random() * Math.max(1, canvas.width - margin * 2);
             }
             
-            obstacles.push({ x: x, y: spawnCursorY, width: width, height: height, type: type });
+            obstacles.push({
+                x: x, y: spawnCursorY, prevY: spawnCursorY,
+                width: width, height: height, type: type
+            });
             spawnCursorY += MIN_OBSTACLE_GAP + Math.random() * OBSTACLE_GAP_RANGE;
         }
         
@@ -642,7 +648,11 @@
         function updateGame() {
             if (gameState !== 'playing') return;
             
-            speed = Math.min(baseSpeed + score * 0.001, 8);
+            // Speed climbs for as long as the run lasts, with no ceiling. Tying the
+            // ramp to elapsed frames rather than score keeps the climb steady
+            // instead of compounding, since score itself grows with speed.
+            runFrames++;
+            speed = baseSpeed + runFrames * acceleration;
             score += Math.floor(speed * 0.5);
             terrainOffset += speed;
             
@@ -671,7 +681,34 @@
             if (shake > 0) shake *= 0.85;
             
             obstacles.forEach(obs => {
+                obs.prevY = obs.y;
                 obs.y -= speed;
+            });
+            
+            // The hit zone is measured on the slope (baseY) rather than at the drawn
+            // position, so altitude is what clears a rock and a tree stays lethal
+            // no matter how high the jump goes. This runs before the off-screen
+            // cleanup below: at high speed one frame can carry an obstacle from
+            // in front of the hedgehog to past the top of the screen, and checking
+            // afterwards would discard the very obstacle that just hit.
+            obstacles.forEach(obs => {
+                const horizontalGap = Math.abs(player.x - obs.x);
+                if (horizontalGap >= (player.width + obs.width) / 2.5) return;
+                
+                // Sweep the obstacle's travel across the hit zone. Since speed is
+                // uncapped, a fast obstacle can cover the whole zone within a single
+                // frame, and testing only its current position would let it pass
+                // straight through the hedgehog.
+                const reach = (player.height + obs.height) / 4;
+                const centreNow = obs.y + obs.height / 2;
+                const centreBefore = obs.prevY + obs.height / 2;
+                
+                if (Math.min(centreNow, centreBefore) <= player.baseY + reach &&
+                    Math.max(centreNow, centreBefore) >= player.baseY - reach) {
+                    if (obs.type === 'tree' || player.airHeight < ROCK_CLEAR_HEIGHT) {
+                        gameOver();
+                    }
+                }
             });
             
             obstacles = obstacles.filter(obs => obs.y > -obs.height - 100);
@@ -690,21 +727,6 @@
             while (snowflakes.length < 5) {
                 spawnSnowflake();
             }
-            
-            // The hit zone is measured on the slope (baseY) rather than at the drawn
-            // position, so altitude is what clears a rock and a tree stays lethal
-            // no matter how high the jump goes.
-            obstacles.forEach(obs => {
-                const horizontalGap = Math.abs(player.x - obs.x);
-                const slopeGap = Math.abs(player.baseY - (obs.y + obs.height / 2));
-                
-                if (horizontalGap < (player.width + obs.width) / 2.5 &&
-                    slopeGap < (player.height + obs.height) / 4) {
-                    if (obs.type === 'tree' || player.airHeight < ROCK_CLEAR_HEIGHT) {
-                        gameOver();
-                    }
-                }
-            });
             
             snowflakes.forEach(flake => {
                 if (!flake.collected) {

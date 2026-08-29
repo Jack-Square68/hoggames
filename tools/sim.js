@@ -89,11 +89,16 @@ const rafStub = cb => { rafCb = cb; return 1; };
 const exportNames = [
   'startGame', 'startJump', 'updateGame', 'gameLoop', 'player', 'obstacles',
   'gameState', 'speed', 'score', 'canvas', 'ROCK_CLEAR_HEIGHT', 'spawnObstacle',
-  'resizeCanvas', 'particles', 'popups'
+  'resizeCanvas', 'particles', 'popups', 'acceleration'
 ];
+// Writable so a test can force the extreme speeds a long run reaches without
+// having to simulate the many minutes it would take to ramp there.
+const writableNames = ['baseSpeed'];
+const accessors = exportNames.map(n => `get ${n}(){return ${n}}`)
+  .concat(writableNames.map(n => `get ${n}(){return ${n}}, set ${n}(v){${n}=v}`));
 const wrapper = new Function(
   'document', 'window', 'localStorage', 'Image', 'requestAnimationFrame',
-  src + '\nreturn {' + exportNames.map(n => `get ${n}(){return ${n}}`).join(',') + '};'
+  src + '\nreturn {' + accessors.join(',') + '};'
 );
 
 const g = wrapper(documentStub, windowStub, localStorageStub, ImageStub, rafStub);
@@ -325,3 +330,69 @@ for (let run = 0; run < 3; run++) {
 }
 console.log('speed at start of runs 1-3:', speeds.map(s => s.toFixed(2)).join(', '));
 console.log('RESULT:', speeds.every(s => Math.abs(s - speeds[0]) < 1e-9) ? 'PASS' : 'FAIL');
+
+// ---- Test 4: speed climbs for the whole run with no ceiling.
+console.log('\n--- Test 4: speed keeps climbing, no ceiling ---');
+g.startGame();
+
+const marks = [600, 1800, 3600, 10800, 36000];
+const ramp = [];
+for (let f = 1; f <= marks[marks.length - 1]; f++) {
+  // Keep the run alive; this test is only about the speed ramp.
+  g.obstacles.length = 0;
+  g.updateGame();
+  if (marks.includes(f)) ramp.push(g.speed);
+}
+
+marks.forEach((m, i) => {
+  console.log(`  ${String((m / 60).toFixed(0) + 's').padStart(5)}` +
+              ` -> ${ramp[i].toFixed(2)} px/frame` +
+              ` (${Math.floor(ramp[i] * 10)} km/h shown)`);
+});
+
+const climbing = ramp.every((s, i) => i === 0 || s > ramp[i - 1]);
+const pastOldCap = ramp[ramp.length - 1] > 8;
+console.log(`  old ceiling was 8.00 px/frame (80 km/h)`);
+console.log('RESULT:', climbing && pastOldCap ? 'PASS' : 'FAIL');
+
+// ---- Test 5: obstacles cannot tunnel through the hedgehog at extreme speed.
+console.log('\n--- Test 5: no tunneling at extreme speed ---');
+
+function hitsAtSpeed(speedPx, type) {
+  g.startGame();
+  g.baseSpeed = speedPx;
+
+  const probe = {
+    x: g.player.x,
+    y: g.player.baseY + speedPx * 4,
+    prevY: g.player.baseY + speedPx * 4,
+    width: type === 'tree' ? 50 : 40,
+    height: type === 'tree' ? 80 : 35,
+    type: type,
+    probe: true
+  };
+
+  for (let f = 0; f < 200; f++) {
+    // Strip anything the game spawns so only the probe can end the run.
+    for (let i = g.obstacles.length - 1; i >= 0; i--) {
+      if (!g.obstacles[i].probe) g.obstacles.splice(i, 1);
+    }
+    if (!g.obstacles.some(o => o.probe)) g.obstacles.push(probe);
+
+    const before = probe.y;
+    g.updateGame();
+    if (g.gameState !== 'playing') return true;
+    if (before < g.player.baseY - 200) return false;
+  }
+  return false;
+}
+
+let noTunnels = true;
+[[8, 'rock'], [30, 'rock'], [80, 'rock'], [250, 'rock'], [900, 'tree']].forEach(([s, type]) => {
+  const hit = hitsAtSpeed(s, type);
+  if (!hit) noTunnels = false;
+  console.log(`  ${type} at ${String(s).padStart(3)} px/frame` +
+              ` (${s * 10} km/h) -> ${hit ? 'hit (expected)' : 'PASSED THROUGH'}`);
+});
+
+console.log('RESULT:', noTunnels ? 'PASS' : 'FAIL');
