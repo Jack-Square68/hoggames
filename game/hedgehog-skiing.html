@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Hedgehog Freeride Skiing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: linear-gradient(180deg, #87CEEB 0%, #FFFFFF 100%);
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #highScore {
+            font-size: 20px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-top: 5px;
+        }
+
+        #speed {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            pointer-events: all;
+        }
+
+        #menu h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        #menu p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+            pointer-events: all;
+        }
+
+        .button:active {
+            transform: scale(0.95);
+        }
+
+        #gameOver {
+            display: none;
+        }
+
+        #gameOver h2 {
+            font-size: 48px;
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+
+        #finalScore {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #instructions {
+            font-size: 16px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="highScore">Best: 0</div>
+            <div id="speed">Speed: 0</div>
+        </div>
+
+        <div id="menu">
+            <h1>🎿 Hedgehog Skiing 🎿</h1>
+            <p>Downhill Freeride Adventure!</p>
+            <button class="button" onclick="startGame()">START GAME</button>
+            <div id="instructions">
+                <strong>How to Play:</strong><br>
+                Tap left or right side of screen to steer<br>
+                Avoid trees and rocks!<br>
+                Collect snowflakes for bonus points!
+            </div>
+        </div>
+
+        <div id="menu" id="gameOver" class="hidden">
+            <h2>Game Over!</h2>
+            <div id="finalScore">Score: 0</div>
+            <button class="button" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let gameState = 'menu';
+        let score = 0;
+        let highScore = localStorage.getItem('hedgehogSkiHighScore') || 0;
+        let speed = 0;
+        let baseSpeed = 5;
+        let acceleration = 0.02;
+        
+        const hedgehogImg = new Image();
+        hedgehogImg.src = 'data:image/jpeg;base64,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';
+        
+        let player = {
+            x: 0,
+            y: 0,
+            width: 60,
+            height: 60,
+            rotation: 0,
+            targetX: 0
+        };
+        
+        let obstacles = [];
+        let snowflakes = [];
+        let trees = [];
+        let terrainOffset = 0;
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.x = canvas.width / 2;
+            player.y = canvas.height * 0.3;
+            player.targetX = player.x;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+        canvas.addEventListener('click', handleClick);
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            if (gameState !== 'playing') return;
+            
+            const touch = e.touches[0] || e.changedTouches[0];
+            const x = touch.clientX;
+            
+            if (x < canvas.width / 2) {
+                player.targetX = Math.max(player.width / 2, player.targetX - 30);
+            } else {
+                player.targetX = Math.min(canvas.width - player.width / 2, player.targetX + 30);
+            }
+        }
+        
+        function handleClick(e) {
+            if (gameState !== 'playing') return;
+            
+            const x = e.clientX;
+            if (x < canvas.width / 2) {
+                player.targetX = Math.max(player.width / 2, player.targetX - 30);
+            } else {
+                player.targetX = Math.min(canvas.width - player.width / 2, player.targetX + 30);
+            }
+        }
+        
+        function startGame() {
+            document.getElementById('menu').classList.add('hidden');
+            document.querySelectorAll('#menu')[1].classList.add('hidden');
+            gameState = 'playing';
+            score = 0;
+            speed = baseSpeed;
+            obstacles = [];
+            snowflakes = [];
+            trees = [];
+            terrainOffset = 0;
+            player.x = canvas.width / 2;
+            player.targetX = player.x;
+            player.rotation = 0;
+            
+            for (let i = 0; i < 5; i++) {
+                spawnObstacle();
+                spawnSnowflake();
+            }
+            
+            gameLoop();
+        }
+        
+        function restartGame() {
+            startGame();
+        }
+        
+        function spawnObstacle() {
+            const types = ['tree', 'rock'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            obstacles.push({
+                x: Math.random() * (canvas.width - 60) + 30,
+                y: canvas.height + Math.random() * 200,
+                width: type === 'tree' ? 50 : 40,
+                height: type === 'tree' ? 80 : 35,
+                type: type
+            });
+        }
+        
+        function spawnSnowflake() {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: canvas.height + Math.random() * 100,
+                size: Math.random() * 8 + 4,
+                collected: false
+            });
+        }
+        
+        function drawSnow() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 50; i++) {
+                const x = (Math.random() * canvas.width + terrainOffset * 0.5) % canvas.width;
+                const y = (terrainOffset * 2 + i * 20) % canvas.height;
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawTerrain() {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#E0E0E0';
+            ctx.lineWidth = 2;
+            
+            for (let i = -1; i < 20; i++) {
+                const y = (i * 100 + terrainOffset) % (canvas.height + 200);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            drawSnow();
+        }
+        
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.rotation);
+            
+            if (hedgehogImg.complete) {
+                ctx.drawImage(hedgehogImg, -player.width / 2, -player.height / 2, player.width, player.height);
+            } else {
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, player.width / 2, player.height / 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        function drawObstacles() {
+            obstacles.forEach(obs => {
+                if (obs.type === 'tree') {
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(obs.x - 10, obs.y, 20, obs.height);
+                    
+                    ctx.fillStyle = '#228B22';
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x, obs.y - 20);
+                    ctx.lineTo(obs.x - 25, obs.y + 30);
+                    ctx.lineTo(obs.x + 25, obs.y + 30);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x, obs.y);
+                    ctx.lineTo(obs.x - 20, obs.y + 20);
+                    ctx.lineTo(obs.x + 20, obs.y + 20);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#808080';
+                    ctx.beginPath();
+                    ctx.ellipse(obs.x, obs.y + obs.height / 2, obs.width / 2, obs.height / 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#A0A0A0';
+                    ctx.beginPath();
+                    ctx.arc(obs.x - 8, obs.y + 5, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function drawSnowflakes() {
+            ctx.fillStyle = '#FFD700';
+            snowflakes.forEach(flake => {
+                if (!flake.collected) {
+                    ctx.save();
+                    ctx.translate(flake.x, flake.y);
+                    ctx.rotate((Date.now() / 200) % (Math.PI * 2));
+                    
+                    for (let i = 0; i < 6; i++) {
+                        ctx.rotate(Math.PI / 3);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, flake.size);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#FFD700';
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                }
+            });
+        }
+        
+        function updateGame() {
+            if (gameState !== 'playing') return;
+            
+            speed = Math.min(baseSpeed + score * 0.001, 15);
+            score += Math.floor(speed);
+            terrainOffset += speed;
+            
+            const dx = player.targetX - player.x;
+            player.x += dx * 0.15;
+            player.rotation = dx * 0.003;
+            
+            obstacles.forEach(obs => {
+                obs.y -= speed;
+            });
+            
+            obstacles = obstacles.filter(obs => obs.y > -obs.height - 100);
+            
+            while (obstacles.length < 8) {
+                spawnObstacle();
+            }
+            
+            snowflakes.forEach(flake => {
+                flake.y -= speed;
+            });
+            
+            snowflakes = snowflakes.filter(flake => !flake.collected && flake.y > -20);
+            
+            while (snowflakes.length < 5) {
+                spawnSnowflake();
+            }
+            
+            obstacles.forEach(obs => {
+                const dist = Math.hypot(player.x - obs.x, player.y - obs.y);
+                if (dist < (player.width + obs.width) / 2) {
+                    gameOver();
+                }
+            });
+            
+            snowflakes.forEach(flake => {
+                if (!flake.collected) {
+                    const dist = Math.hypot(player.x - flake.x, player.y - flake.y);
+                    if (dist < player.width / 2 + flake.size) {
+                        flake.collected = true;
+                        score += 100;
+                    }
+                }
+            });
+        }
+        
+        function drawUI() {
+            document.getElementById('score').textContent = `Score: ${Math.floor(score)}`;
+            document.getElementById('highScore').textContent = `Best: ${Math.floor(highScore)}`;
+            document.getElementById('speed').textContent = `${Math.floor(speed * 10)} km/h`;
+        }
+        
+        function gameOver() {
+            gameState = 'gameover';
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('hedgehogSkiHighScore', Math.floor(highScore));
+            }
+            
+            const gameOverMenu = document.querySelectorAll('#menu')[1];
+            gameOverMenu.classList.remove('hidden');
+            document.getElementById('finalScore').textContent = `Score: ${Math.floor(score)}`;
+        }
+        
+        function gameLoop() {
+            if (gameState === 'playing') {
+                updateGame();
+            }
+            
+            drawTerrain();
+            drawObstacles();
+            drawSnowflakes();
+            drawPlayer();
+            drawUI();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        document.getElementById('highScore').textContent = `Best: ${Math.floor(highScore)}`;
+    </script>
+</body>
+</html>
